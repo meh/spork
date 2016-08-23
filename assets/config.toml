@@ -1,0 +1,150 @@
+[actions]
+# Backlight.
+232 = 'dux dec 5'
+233 = 'dux inc 5'
+
+# Audio.
+123 = 'pulseaudio-ctl up'
+122 = 'pulseaudio-ctl down'
+121 = 'pulseaudio-ctl mute'
+
+# Random stuff.
+M-t = 'urxvt'
+M-g = 'gimp'
+
+# Browsers.
+M-w   = 'firefox -P default'
+M-S-w = 'google-chrome-stable'
+
+# Screen management.
+Z-S-l = 'screenruster lock'
+Z-F12 = 'screenshot scr'
+M-F12 = 'screenshot win'
+C-F12 = 'screenshot area'
+
+# Desktop management.
+Z-Right = '!desktop next'
+Z-Left  = '!desktop prev'
+
+M-F1  = '!desktop 0'
+M-F2  = '!desktop 1'
+M-F3  = '!desktop 2'
+M-F4  = '!desktop 3'
+M-F5  = '!desktop 4'
+M-F6  = '!desktop 5'
+M-F7  = '!desktop 6'
+M-Del = '!desktop 7'
+
+# Window management.
+Z-t    = '!decoration $WINDOW toggle'
+M-Tab  = '!focus next'
+M-k    = '!kill $WINDOW'
+Z-C-Up = '!grid $WINDOW screen'
+
+Z-f       = '!grid $WINDOW full'
+Z-C-Left  = '!grid $WINDOW full-left'
+Z-C-Right = '!grid $WINDOW full-right'
+
+Z-M-f       = '!grid $WINDOW half'
+Z-C-M-Left  = '!grid $WINDOW half-left'
+Z-C-M-Right = '!grid $WINDOW half-right'
+
+# Workspaces.
+[[desktop]]
+name = "0x01"
+
+[[desktop]]
+name = "0x02"
+
+[[desktop]]
+name = "0x04"
+
+[[desktop]]
+name = "0x08"
+
+[[desktop]]
+name = "0x10"
+
+[[desktop]]
+name = "0x20"
+
+[[desktop]]
+name = "0x40"
+
+[[desktop]]
+name = "0x80"
+
+# Default window decoration.
+[default.decoration]
+border = { width = 1, color = "#b21818" }
+
+# Stickied window on the bottom.
+[[window]]
+instance   = "bottom"
+class      = "URxvt"
+sticky     = true
+grid       = "bottom"
+decoration = false
+level      = -1
+
+# First desktop terminal
+[[window]]
+instance   = "first"
+class      = "URxvt"
+desktop    = 0
+grid       = "half"
+decoration = false
+
+# Second desktop terminal.
+[[window]]
+instance   = "second"
+class      = "URxvt"
+desktop    = 1
+grid       = "half"
+decoration = false
+
+# Lonely window on the lonely desktop.
+[[window]]
+instance   = "alone"
+class      = "URxvt"
+desktop    = 6
+grid       = "full"
+decoration = false
+
+# SJWfox.
+[[window]]
+instance   = "Firefox"
+class      = "Navigator"
+desktop    = 2
+grid       = "half"
+decoration = false
+
+# Join the matrix.
+[grid.full]
+height = "screen.height - 12"
+
+[grid.full_left]
+width  = "screen.width / 2"
+height = "screen.height - 12"
+
+[grid.full_right]
+x      = "screen.width / 2"
+width  = "screen.width / 2"
+height = "screen.height - 12"
+
+[grid.half]
+height = "screen.height - bottom.height - 4"
+
+[grid.half_left]
+width  = "screen.width / 2"
+height = "screen.height - bottom.height - 4"
+
+[grid.half_right]
+x      = "screen.width / 2"
+width  = "screen.width / 2"
+height = "screen.height - bottom.height - 4"
+
+[grid.bottom]
+y      = 848
+width  = 1920
+height = 232

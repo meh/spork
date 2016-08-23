@@ -1,0 +1,35 @@
+[package]
+name    = "spork"
+version = "0.1.0"
+
+authors = ["meh. <meh@schizofreni.co>"]
+license = "GPL-3.0"
+
+description = "Grid based window manager."
+repository  = "https://github.com/meh/spork"
+keywords    = ["x11", "graphics", "window", "wm"]
+
+[dependencies]
+log        = "0.3"
+env_logger = "0.3"
+
+clap = "2"
+xdg  = "2"
+toml = "0.1"
+dbus = "0.3"
+
+lazy_static = "0.1"
+bitflags    = "0.7"
+
+palette  = "0.2"
+petgraph = "0.2"
+
+meval                = "0.0"
+regex                = "0.1"
+unicode-segmentation = "0.1.2"
+shlex                = "0.1"
+
+libc      = "0.2"
+xcb       = { version = "0.7", features = ["randr", "dpms", "xkb"] }
+xcb-util  = { version = "0.1", features = ["icccm", "ewmh"] }
+xkbcommon = { version = "0.2", features = ["x11"] }
