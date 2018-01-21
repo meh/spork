@@ -18,7 +18,7 @@
 use std::thread;
 use std::sync::Arc;
 use std::ops::Deref;
-use std::sync::mpsc::{Receiver, Sender, SendError, channel};
+use channel;
 
 use dbus;
 
@@ -26,23 +26,23 @@ use error;
 use config::Config;
 
 pub struct Interface {
-	receiver: Receiver<Request>,
-	sender:   Sender<Response>,
-	signals:  Sender<Signal>,
+	receiver: channel::Receiver<Request>,
+	sender:   channel::Sender<Response>,
+	signals:  channel::Sender<Signal>,
 }
 
 #[derive(Debug)]
 pub enum Request {
 	/// Reload the configuration file.
 	Reload(Option<String>),
+	Execute,
 }
 
 #[derive(Debug)]
 pub enum Response {
 	/// Whether the reload was successful or not.
 	Reload(bool),
-
-	Foo,
+	Execute,
 }
 
 #[derive(Debug)]
@@ -52,11 +52,11 @@ pub enum Signal {
 
 impl Interface {
 	/// Spawn a DBus interface with the given configuration.
-	pub fn spawn(config: Config) -> error::Result<Interface> {
-		let (sender, i_receiver) = channel();
-		let (i_sender, receiver) = channel();
-		let (s_sender, signals)  = channel();
-		let (g_sender, g_receiver) = channel::<error::Result<()>>();
+	pub fn spawn(config: Config) -> Result<Interface, dbus::Error> {
+		let (sender, i_receiver)   = channel::unbounded();
+		let (i_sender, receiver)   = channel::unbounded();
+		let (s_sender, signals)    = channel::unbounded();
+		let (g_sender, g_receiver) = channel::unbounded::<Result<(), dbus::Error>>();
 
 		macro_rules! dbus {
 			(connect) => (
@@ -66,7 +66,7 @@ impl Interface {
 					}
 
 					Err(error) => {
-						g_sender.send(Err(error.into())).unwrap();
+						g_sender.send(Err(error)).unwrap();
 						return;
 					}
 				}
@@ -74,13 +74,8 @@ impl Interface {
 
 			(register $conn:expr, $name:expr) => (
 				match $conn.register_name($name, dbus::NameFlag::DoNotQueue as u32) {
-					Ok(dbus::RequestNameReply::Exists) => {
-						g_sender.send(Err(error::DBus::AlreadyRegistered.into())).unwrap();
-						return;
-					}
-
 					Err(error) => {
-						g_sender.send(Err(error.into())).unwrap();
+						g_sender.send(Err(error)).unwrap();
 						return;
 					}
 
@@ -92,7 +87,7 @@ impl Interface {
 
 			(watch $conn:expr, $filter:expr) => (
 				if let Err(error) =  $conn.add_match($filter) {
-					g_sender.send(Err(error.into())).unwrap();
+					g_sender.send(Err(error)).unwrap();
 					return;
 				}
 			);
@@ -108,18 +103,18 @@ impl Interface {
 
 		thread::spawn(move || {
 			let c = dbus!(connect);
-			let f = dbus::tree::Factory::new_fn();
+			let f = dbus::tree::Factory::new_fn::<()>();
 
 			dbus!(register c, "meh.rust.WindowManager");
 			dbus!(ready);
 
-			let tree = f.tree()
-				.add(f.object_path("/meh/rust/WindowManager").introspectable().add(f.interface("meh.rust.WindowManager")
-					.add_m(f.method("Reload", |m, _, _| {
-						sender.send(Request::Reload(m.get1())).unwrap();
+			let tree = f.tree(())
+				.add(f.object_path("/meh/rust/WindowManager", ()).introspectable().add(f.interface("meh.rust.WindowManager", ())
+					.add_m(f.method("Reload", (), move |m| {
+						sender.send(Request::Reload(m.msg.get1())).unwrap();
 
 						if let Response::Reload(value) = receiver.recv().unwrap() {
-							Ok(vec![m.method_return().append1(value)])
+							Ok(vec![m.msg.method_return().append1(value)])
 						}
 						else {
 							unreachable!();
@@ -156,19 +151,19 @@ impl Interface {
 		})
 	}
 
-	pub fn response(&self, value: Response) -> Result<(), SendError<Response>> {
+	pub fn response(&self, value: Response) -> Result<(), channel::SendError<Response>> {
 		self.sender.send(value)
 	}
 
-	pub fn signal(&self, value: Signal) -> Result<(), SendError<Signal>> {
+	pub fn signal(&self, value: Signal) -> Result<(), channel::SendError<Signal>> {
 		self.signals.send(value)
 	}
 }
 
 impl Deref for Interface {
-	type Target = Receiver<Request>;
+	type Target = channel::Receiver<Request>;
 
-	fn deref(&self) -> &Receiver<Request> {
+	fn deref(&self) -> &channel::Receiver<Request> {
 		&self.receiver
 	}
 }

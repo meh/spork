@@ -145,6 +145,6 @@ width  = "screen.width / 2"
 height = "screen.height - bottom.height - 4"
 
 [grid.bottom]
-y      = 848
-width  = 1920
+y      = "screen.height - bottom.height"
+width  = "screen.width"
 height = 232

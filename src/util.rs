@@ -15,19 +15,51 @@
 // You should have received a copy of the GNU General Public License
 // along with spork.  If not, see <http://www.gnu.org/licenses/>.
 
-use palette::Rgb;
+use palette::Rgba;
 use regex::Regex;
 
-lazy_static! {
-	static ref HEX_RGB: Regex = Regex::new(r"#([:xdigit:]{2})([:xdigit:]{2})([:xdigit:]{2})").unwrap();
+pub fn is_color<T: AsRef<str>>(arg: T) -> bool {
+	let arg = arg.as_ref();
+
+	arg.starts_with('#') &&
+	(arg.len() == 4 || arg.len() == 5 || arg.len() == 7 || arg.len() == 9) &&
+	arg.chars().skip(1).all(|c| c.is_digit(16))
 }
 
-pub fn color<T: AsRef<str>>(value: T) -> Option<Rgb> {
-	HEX_RGB.captures(value.as_ref()).map(|captures| {
-		Rgb::new_u8(
-			u8::from_str_radix(captures.at(1).unwrap_or("0"), 16).unwrap_or(0),
-			u8::from_str_radix(captures.at(2).unwrap_or("0"), 16).unwrap_or(0),
-			u8::from_str_radix(captures.at(3).unwrap_or("0"), 16).unwrap_or(0),
-		)
-	})
+pub fn to_color<T: AsRef<str>>(arg: T) -> Option<Rgba<f64>> {
+	let arg = arg.as_ref();
+
+	if !is_color(arg) {
+		return None;
+	}
+
+	let (r, g, b, a) = if arg.len() == 4 {
+		(u8::from_str_radix(&arg[1..2], 16).unwrap() * 0x11,
+		 u8::from_str_radix(&arg[2..3], 16).unwrap() * 0x11,
+		 u8::from_str_radix(&arg[3..4], 16).unwrap() * 0x11,
+		 255)
+	}
+	else if arg.len() == 5 {
+		(u8::from_str_radix(&arg[1..2], 16).unwrap() * 0x11,
+		 u8::from_str_radix(&arg[2..3], 16).unwrap() * 0x11,
+		 u8::from_str_radix(&arg[3..4], 16).unwrap() * 0x11,
+		 u8::from_str_radix(&arg[4..5], 16).unwrap() * 0x11)
+	}
+	else if arg.len() == 7 {
+		(u8::from_str_radix(&arg[1..3], 16).unwrap(),
+		 u8::from_str_radix(&arg[3..5], 16).unwrap(),
+		 u8::from_str_radix(&arg[5..7], 16).unwrap(),
+		 255)
+	}
+	else if arg.len() == 9 {
+		(u8::from_str_radix(&arg[1..3], 16).unwrap(),
+		 u8::from_str_radix(&arg[3..5], 16).unwrap(),
+		 u8::from_str_radix(&arg[5..7], 16).unwrap(),
+		 u8::from_str_radix(&arg[7..9], 16).unwrap())
+	}
+	else {
+		unreachable!()
+	};
+
+	Some(Rgba::new_u8(r, g, b, a))
 }

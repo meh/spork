@@ -15,7 +15,10 @@
 // You should have received a copy of the GNU General Public License
 // along with spork.  If not, see <http://www.gnu.org/licenses/>.
 
+use std::sync::Arc;
 use xcb;
+
+use error;
 
 pub struct Window {
 	conn: Arc<xcb::Connection>,

@@ -22,8 +22,8 @@ use std::sync::{Arc, RwLock};
 
 use xdg;
 use toml;
+use failure::Error;
 
-use error;
 use super::{Desktops, Windows, Grids, Actions};
 
 #[derive(Clone, Default, Debug)]
@@ -37,14 +37,14 @@ pub struct Config {
 }
 
 impl Config {
-	pub fn load<T: AsRef<Path>>(path: Option<T>) -> error::Result<Config> {
+	pub fn load<T: AsRef<Path>>(path: Option<T>) -> Result<Config, Error> {
 		let config = Config::default();
 		config.reload(path)?;
 
 		Ok(config)
 	}
 
-	pub fn reload<T: AsRef<Path>>(&self, path: Option<T>) -> error::Result<()> {
+	pub fn reload<T: AsRef<Path>>(&self, path: Option<T>) -> Result<(), Error> {
 		let path = if let Some(path) = path {
 			*self.path.write().unwrap() = Some(path.as_ref().into());
 			path.as_ref().into()
@@ -61,10 +61,10 @@ impl Config {
 			let mut content = String::new();
 			file.read_to_string(&mut content)?;
 
-			toml::Parser::new(&content).parse().ok_or(error::Error::Parse)?
+			content.parse::<toml::Value>()?.try_into()?
 		}
 		else {
-			toml::Table::new()
+			toml::value::Table::new()
 		};
 
 		self.actions.load(&table)?;

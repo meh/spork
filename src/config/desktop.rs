@@ -34,14 +34,14 @@ pub struct Desktop {
 }
 
 impl Desktops {
-	pub fn load(&self, table: &toml::Table) -> error::Result<()> {
-		if let Some(slice) = table.get("desktop").and_then(|v| v.as_slice()) {
+	pub fn load(&self, table: &toml::value::Table) -> error::Result<()> {
+		if let Some(slice) = table.get("desktop").and_then(|v| v.as_array()) {
 			let mut desktops = Vec::with_capacity(slice.len());
 
 			for table in slice {
 				let mut desktop = Desktop::default();
 
-				if let Some(value) = table.lookup("name").and_then(|v| v.as_str()) {
+				if let Some(value) = table.get("name").and_then(|v| v.as_str()) {
 					desktop.name = Some(value.into());
 				}
 

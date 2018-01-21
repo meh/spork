@@ -17,7 +17,8 @@
 
 use std::sync::{Arc, RwLock};
 use std::collections::HashMap;
-use petgraph::{Graph, DfsIter};
+use petgraph::Graph;
+use petgraph::visit::Dfs;
 use regex::Regex;
 use toml;
 use meval;
@@ -59,7 +60,7 @@ impl Default for Grid {
 }
 
 impl Grids {
-	pub fn load(&self, table: &toml::Table) -> error::Result<()> {
+	pub fn load(&self, table: &toml::value::Table) -> error::Result<()> {
 		if let Some(table) = table.get("grid").and_then(|v| v.as_table()) {
 			let mut grids = HashMap::new();
 
@@ -67,7 +68,7 @@ impl Grids {
 				let mut grid = Grid::default();
 				grid.name = name.clone();
 
-				if let Some(value) = table.lookup("x") {
+				if let Some(value) = table.get("x") {
 					match *value {
 						toml::Value::Integer(value) =>
 							grid.x = value.to_string(),
@@ -79,7 +80,7 @@ impl Grids {
 					}
 				}
 
-				if let Some(value) = table.lookup("y") {
+				if let Some(value) = table.get("y") {
 					match *value {
 						toml::Value::Integer(value) =>
 							grid.y = value.to_string(),
@@ -91,7 +92,7 @@ impl Grids {
 					}
 				}
 
-				if let Some(value) = table.lookup("width") {
+				if let Some(value) = table.get("width") {
 					match *value {
 						toml::Value::Integer(value) =>
 							grid.width = value.to_string(),
@@ -103,7 +104,7 @@ impl Grids {
 					}
 				}
 
-				if let Some(value) = table.lookup("height") {
+				if let Some(value) = table.get("height") {
 					match *value {
 						toml::Value::Integer(value) =>
 							grid.height = value.to_string(),
@@ -168,8 +169,10 @@ impl Grids {
 				}
 			}
 
+			let mut dfs = Dfs::new(&graph, root);
+
 			// Iterate over the graph to calculate fields in the proper order.
-			for node in DfsIter::new(&graph, root) {
+			while let Some(node) = dfs.next(&graph) {
 				let (name, field) = graph[node];
 
 				// The screen is not an actual dependency.

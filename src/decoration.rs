@@ -25,14 +25,14 @@ pub struct Decoration {
 #[derive(PartialEq, Copy, Clone, Debug)]
 pub struct Border {
 	pub width: u8,
-	pub color: palette::Rgb,
+	pub color: palette::Rgba<f64>,
 }
 
 impl Default for Border {
 	fn default() -> Self {
 		Border {
 			width: 1,
-			color: palette::Rgb::new(1.0, 1.0, 1.0),
+			color: palette::Rgba::new(1.0, 1.0, 1.0, 1.0),
 		}
 	}
 }

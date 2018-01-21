@@ -10,26 +10,28 @@ repository  = "https://github.com/meh/spork"
 keywords    = ["x11", "graphics", "window", "wm"]
 
 [dependencies]
-log        = "0.3"
-env_logger = "0.3"
+log        = "0.4"
+env_logger = "0.5"
 
 clap = "2"
 xdg  = "2"
-toml = "0.1"
-dbus = "0.3"
+toml = "0.4"
+dbus = "0.6"
 
-lazy_static = "0.1"
-bitflags    = "0.7"
+lazy_static       = "1.0"
+bitflags          = "0.9"
+failure           = "0.1"
+crossbeam-channel = "0.1"
 
 palette  = "0.2"
-petgraph = "0.2"
+petgraph = "0.4"
 
-meval                = "0.0"
-regex                = "0.1"
-unicode-segmentation = "0.1.2"
+meval                = "0.1"
+regex                = "0.2"
+unicode-segmentation = "1.2"
 shlex                = "0.1"
 
 libc      = "0.2"
-xcb       = { version = "0.7", features = ["randr", "dpms", "xkb"] }
-xcb-util  = { version = "0.1", features = ["icccm", "ewmh"] }
-xkbcommon = { version = "0.2", features = ["x11"] }
+xcb       = { version = "0.8", features = ["randr", "dpms", "xkb", "thread"] }
+xcb-util  = { version = "0.2", features = ["icccm", "ewmh", "thread"] }
+xkbcommon = { version = "0.3", features = ["x11"] }

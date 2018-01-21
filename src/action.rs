@@ -152,7 +152,7 @@ impl FromStr for Decoration {
 				Ok(Decoration::Toggle),
 
 			_ =>
-				Err(error::Error::Parse),
+				Err(error::Action::Parse.into()),
 		}
 	}
 }
@@ -162,10 +162,10 @@ impl FromStr for Action {
 
 	fn from_str(s: &str) -> error::Result<Self> {
 		if !s.starts_with('!') {
-			let mut name      = shlex::split(s).ok_or(error::Error::Parse)?;
+			let mut name      = shlex::split(s).ok_or(error::Action::Parse)?;
 			let     arguments = name.split_off(1);
 
-			return Ok(Action::Execute(name.pop().ok_or(error::Error::Parse)?, arguments));
+			return Ok(Action::Execute(name.pop().ok_or(error::Action::Parse)?, arguments));
 		}
 
 		let mut parts = s[1..].split(' ');
@@ -176,7 +176,7 @@ impl FromStr for Action {
 					Ok(Action::Desktop(Desktop::from_str(value)?)),
 
 				_ =>
-					Err(error::Error::Parse)
+					Err(error::Action::Parse.into())
 			},
 
 			Some("grid") => match parts.next() {
@@ -186,11 +186,11 @@ impl FromStr for Action {
 					}
 
 					_ =>
-						Err(error::Error::Parse)
+						Err(error::Action::Parse.into())
 				},
 
 				_ =>
-					Err(error::Error::Parse)
+					Err(error::Action::Parse.into())
 			},
 
 			Some("focus") => match parts.next() {
@@ -198,7 +198,7 @@ impl FromStr for Action {
 					Ok(Action::Focus(Focus::from_str(value)?)),
 
 				_ =>
-					Err(error::Error::Parse)
+					Err(error::Action::Parse.into())
 			},
 
 			Some("kill") => match parts.next() {
@@ -206,7 +206,7 @@ impl FromStr for Action {
 					Ok(Action::Kill(Window::from_str(value)?)),
 
 				_ =>
-					Err(error::Error::Parse)
+					Err(error::Action::Parse.into())
 			},
 
 			Some("decoration") => match parts.next() {
@@ -215,15 +215,15 @@ impl FromStr for Action {
 						Ok(Action::Decoration(Window::from_str(window)?, Decoration::from_str(what)?)),
 
 					_ =>
-						Err(error::Error::Parse)
+						Err(error::Action::Parse.into())
 				},
 
 				_ =>
-					Err(error::Error::Parse)
+					Err(error::Action::Parse.into())
 			},
 
 			_ =>
-				Err(error::Error::Parse)
+				Err(error::Action::Parse.into())
 		}
 	}
 }

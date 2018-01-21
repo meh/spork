@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with spork.  If not, see <http://www.gnu.org/licenses/>.
 
-#![feature(mpsc_select, question_mark, pub_restricted)]
+#![feature(mpsc_select)]
 
 #[macro_use]
 extern crate log;
@@ -30,6 +30,8 @@ extern crate dbus;
 
 #[macro_use] extern crate bitflags;
 #[macro_use] extern crate lazy_static;
+#[macro_use] extern crate failure;
+#[macro_use] extern crate crossbeam_channel as channel;
 
 extern crate palette;
 extern crate petgraph;
@@ -48,7 +50,6 @@ extern crate xkbcommon;
 mod util;
 
 mod error;
-use error::Error;
 
 mod key;
 use key::Key;
@@ -74,8 +75,54 @@ use config::Config;
 mod interface;
 use interface::Interface;
 
+mod manager;
+use manager::Manager;
+
+use std::process;
+use std::io::{self, Write};
+use std::fmt;
+
+macro_rules! exit {
+	($body:expr) => (
+		match $body {
+			Ok(value) =>
+				value,
+
+//			Err(error) =>
+//				if let Some(err) = error.downcast_ref::<error::X>() {
+//					match *err {
+//						error::X::MissingExtension { ref name }
+//					}
+//				}
+//
+//			Err(Error::Parse) =>
+//				exit(10, "Could not load configuration file."),
+//
+//			Err(e@Error::X(error::X::Connection(..))) =>
+//				exit(20, e),
+//
+//			Err(e@Error::X(error::X::HasWindowManager)) =>
+//				exit(21, e),
+//
+//			Err(Error::X(error::X::MissingExtension(ref name))) =>
+//				exit(22, format!("Missing extension {}", name)),
+//
+//			Err(e@Error::DBus(error::DBus::AlreadyRegistered)) =>
+//				exit(30, e),
+
+			Err(err) =>
+				exit(255, err)
+		}
+	);
+}
+
+fn exit<T: fmt::Display>(code: i32, message: T) -> ! {
+	writeln!(&mut io::stderr(), "spork: {}", message).unwrap();
+	process::exit(code);
+}
+
 fn main() {
-	env_logger::init().unwrap();
+	env_logger::init();
 
 	let matches = App::new("spork")
 		.version(env!("CARGO_PKG_VERSION"))
@@ -92,7 +139,31 @@ fn main() {
 			.help("Path to the configuration file."))
 		.get_matches();
 
-	let config    = Config::load(matches.value_of("config")).unwrap();
-	let display   = Display::open(matches.value_of("display"), config.clone()).unwrap();
-	let interface = Interface::spawn(config.clone()).unwrap();
+	let config    = exit!(Config::load(matches.value_of("config")));
+	let display   = exit!(Display::open(matches.value_of("display"), config.clone()));
+	let interface = exit!(Interface::spawn(config.clone()));
+	let manager   = exit!(Manager::new(config.clone(), display.clone()));
+
+	// XXX: select! is icky, this works around shadowing the outer name
+	let x = display::sink(&display);
+	let i = &*interface;
+
+	loop {
+		select_loop! {
+			recv(x, event) => {
+				match event.response_type() {
+					e => {
+						println!("{:?}", e);
+					}
+				}
+			},
+
+			recv(i, event) => {
+				match event {
+					interface::Request::Reload(ref path) => (),
+					interface::Request::Execute => (),
+				}
+			}
+		}
+	}
 }

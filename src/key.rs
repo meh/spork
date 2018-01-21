@@ -27,12 +27,12 @@ pub struct Key {
 }
 
 bitflags! {
-	pub flags Modifiers: u8 {
-		const NONE  = 0x00,
-		const SHIFT = 0x01,
-		const META  = 0x02,
-		const CTRL  = 0x04,
-		const ZUPER = 0x08,
+	pub struct Modifiers: u8 {
+		const NONE  = 0x00;
+		const SHIFT = 0x01;
+		const META  = 0x02;
+		const CTRL  = 0x04;
+		const ZUPER = 0x08;
 	}
 }
 
@@ -72,7 +72,7 @@ impl FromStr for Key {
 
 	fn from_str(s: &str) -> error::Result<Self> {
 		let mut modifiers = s.split('-').collect::<Vec<&str>>();
-		let     value     = modifiers.pop().ok_or(error::Error::Parse)?;
+		let     value     = modifiers.pop().ok_or(error::Key::Parse)?;
 
 		let modifiers = modifiers.iter().fold(Modifiers::empty(), |r, m|
 			r | match *m {
@@ -113,7 +113,7 @@ impl FromStr for Key {
 				"del" | "delete" => Special::Delete,
 
 				_ =>
-					return Err(error::Error::Parse),
+					return Err(error::Key::Parse.into()),
 			})
 		};
 

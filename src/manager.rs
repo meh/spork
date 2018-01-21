@@ -15,38 +15,17 @@
 // You should have received a copy of the GNU General Public License
 // along with spork.  If not, see <http://www.gnu.org/licenses/>.
 
-use std::fmt;
-use std::error;
-use std::io;
+use failure::Error;
 
-pub use failure::Error;
-pub type Result<T> = ::std::result::Result<T, Error>;
+use config::Config;
+use display::Display;
 
-#[derive(Debug, Fail)]
-pub enum X {
-	#[fail(display = "missing extension: {}", name)]
-	MissingExtension {
-		name: String
-	},
+pub struct Manager {
 
-	#[fail(display = "another window manager is already running")]
-	HasWindowManager,
 }
 
-#[derive(Debug, Fail)]
-pub enum DBus {
-	#[fail(display = "the name has already been registered")]
-	AlreadyRegistered,
-}
-
-#[derive(Debug, Fail)]
-pub enum Key {
-	#[fail(display = "key failed to parse")]
-	Parse,
-}
-
-#[derive(Debug, Fail)]
-pub enum Action {
-	#[fail(display = "key failed to parse")]
-	Parse,
+impl Manager {
+	pub fn new(config: Config, display: Display) -> Result<Manager, Error> {
+		bail!("dunno");
+	}
 }

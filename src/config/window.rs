@@ -17,10 +17,10 @@
 
 use std::sync::{Arc, RwLock};
 use toml;
+use failure::Error;
 
 use util;
 use decoration::{Border, Decoration};
-use error;
 
 #[derive(Clone, Default, Debug)]
 pub struct Windows(pub(super) Arc<RwLock<Data>>);
@@ -54,28 +54,28 @@ pub enum Grid {
 }
 
 impl Windows {
-	pub fn load(&self, table: &toml::Table) -> error::Result<()> {
+	pub fn load(&self, table: &toml::value::Table) -> Result<(), Error> {
 		if let Some(table) = table.get("default") {
-			if let Some(table) = table.lookup("decoration").and_then(|v| v.as_table()) {
+			if let Some(table) = table.get("decoration").and_then(|v| v.as_table()) {
 				self.0.write().unwrap().decoration = decoration(table);
 			}
 		}
 
-		if let Some(slice) = table.get("window").and_then(|v| v.as_slice()) {
+		if let Some(slice) = table.get("window").and_then(|v| v.as_array()) {
 			let mut windows = Vec::with_capacity(slice.len());
 
 			for table in slice {
 				let mut window = Window::default();
 
-				if let Some(value) = table.lookup("instance").and_then(|v| v.as_str()) {
+				if let Some(value) = table.get("instance").and_then(|v| v.as_str()) {
 					window.instance = Some(value.into());
 				}
 
-				if let Some(value) = table.lookup("class").and_then(|v| v.as_str()) {
+				if let Some(value) = table.get("class").and_then(|v| v.as_str()) {
 					window.class = Some(value.into());
 				}
 
-				if let Some(value) = table.lookup("desktop") {
+				if let Some(value) = table.get("desktop") {
 					window.desktop = match *value {
 						toml::Value::Integer(value) =>
 							Some(Desktop::Index(value as isize)),
@@ -88,7 +88,7 @@ impl Windows {
 					}
 				}
 
-				if let Some(value) = table.lookup("grid") {
+				if let Some(value) = table.get("grid") {
 					window.grid = match *value {
 						toml::Value::Integer(value) =>
 							Some(Grid::Index(value as isize)),
@@ -101,7 +101,7 @@ impl Windows {
 					}
 				}
 
-				if let Some(value) = table.lookup("decoration") {
+				if let Some(value) = table.get("decoration") {
 					if let Some(table) = value.as_table() {
 						window.decoration = Some(decoration(table));
 					}
@@ -110,7 +110,7 @@ impl Windows {
 					}
 				}
 
-				if let Some(value) = table.lookup("level").and_then(|v| v.as_integer()) {
+				if let Some(value) = table.get("level").and_then(|v| v.as_integer()) {
 					window.level = value as i8;
 				}
 
@@ -124,7 +124,7 @@ impl Windows {
 	}
 }
 
-fn decoration(table: &toml::Table) -> Decoration {
+fn decoration(table: &toml::value::Table) -> Decoration {
 	let mut decoration = Decoration::default();
 
 	if let Some(table) = table.get("border").and_then(|v| v.as_table()) {
@@ -134,7 +134,7 @@ fn decoration(table: &toml::Table) -> Decoration {
 			border.width = value as u8;
 		}
 
-		if let Some(value) = table.get("color").and_then(|v| v.as_str()).and_then(|v| util::color(v)) {
+		if let Some(value) = table.get("color").and_then(|v| v.as_str()).and_then(|v| util::to_color(v)) {
 			border.color = value;
 		}
 

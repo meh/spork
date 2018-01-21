@@ -33,7 +33,7 @@ pub(super) struct Data {
 }
 
 impl Actions {
-	pub fn load(&self, table: &toml::Table) -> error::Result<()> {
+	pub fn load(&self, table: &toml::value::Table) -> error::Result<()> {
 		if let Some(table) = table.get("actions").and_then(|v| v.as_table()) {
 			let mut actions = HashMap::new();
 
